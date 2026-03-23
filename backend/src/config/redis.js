@@ -1,14 +1,20 @@
 import { createClient } from 'redis';
 
 export const redisClient = createClient({
-    url: process.env.REDIS_URL
-});
-
-redisClient.on('error', (error) => {
-    console.warn('Redis error (falling back to no-cache):', error.message);
+    url: process.env.REDIS_URL,
+    socket: {
+        reconnectStrategy: false   // don't auto-reconnect when Redis is down
+    }
 });
 
 let redisReady = false;
+
+redisClient.on('error', (error) => {
+    if (redisReady) {
+        console.warn('Redis error:', error.message);
+    }
+    redisReady = false;
+});
 
 export async function connectRedis() {
     try {
