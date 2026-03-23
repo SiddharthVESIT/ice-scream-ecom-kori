@@ -10,7 +10,7 @@ export async function registerUser({ fullName, email, password }) {
 
     const passwordHash = await bcrypt.hash(password, 12);
     const user = await createUser({ fullName, email, passwordHash });
-    const token = signToken({ sub: user.id, email: user.email });
+    const token = signToken({ sub: user.id, email: user.email, role: user.role });
 
     return { user, token };
 }
@@ -26,7 +26,7 @@ export async function loginUser({ email, password }) {
         throw new Error('Invalid credentials');
     }
 
-    const token = signToken({ sub: user.id, email: user.email });
+    const token = signToken({ sub: user.id, email: user.email, role: user.role });
 
     return {
         token,
@@ -34,6 +34,7 @@ export async function loginUser({ email, password }) {
             id: user.id,
             fullName: user.full_name,
             email: user.email,
+            role: user.role,
             loyaltyPoints: user.loyalty_points
         }
     };

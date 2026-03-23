@@ -35,8 +35,62 @@ export default function CheckoutPage() {
         }).filter(item => item.quantity > 0));
     };
 
-    const placeOrder = () => {
-        setOrderPlaced(true);
+    const placeOrder = async () => {
+        try {
+            // 1. Create order
+            const token = localStorage.getItem('token');
+            const res = await fetch('http://localhost:4000/api/v1/orders/razorpay/create', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ amount: total })
+            });
+            const data = await res.json();
+            
+            if (!data.orderId) throw new Error('Order creation failed');
+
+            // 2. Open Razorpay
+            const options = {
+                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+                amount: data.amount,
+                currency: "JPY",
+                name: "Kori氷",
+                description: "Premium Japanese Ice Cream",
+                order_id: data.orderId,
+                handler: async function (response: any) {
+                    // 3. Verify Payment
+                    const verifyRes = await fetch('http://localhost:4000/api/v1/orders/razorpay/verify', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature
+                        })
+                    });
+                    
+                    if (verifyRes.ok) {
+                        setOrderPlaced(true);
+                    } else {
+                        alert('Payment verification failed.');
+                    }
+                },
+                theme: {
+                    color: "#A2C2A1" // kori-sage color
+                }
+            };
+            
+            const rzp = new (window as any).Razorpay(options);
+            rzp.open();
+        } catch (err: any) {
+            console.error('Checkout error', err);
+            alert('Something went wrong during checkout: ' + err.message);
+        }
     };
 
     if (orderPlaced) {
@@ -170,7 +224,7 @@ export default function CheckoutPage() {
                                     onClick={placeOrder}
                                     className="w-full py-3 bg-kori-charcoal text-kori-cream rounded-full text-sm font-medium hover:bg-kori-sage transition-all duration-300 hover:scale-[1.02]"
                                 >
-                                    Place Order
+                                    Pay with Razorpay
                                 </button>
 
                                 <p className="text-[10px] text-kori-charcoal-light/30 text-center mt-3">

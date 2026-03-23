@@ -52,7 +52,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── Flavor Discovery Quiz ─── */}
-      <section className="py-20 px-6">
+      <section id="flavor-quiz" className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center mb-12">
           <h2 className="font-display text-3xl font-semibold text-kori-charcoal mb-3">
             Discover Your Flavor

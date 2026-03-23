@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 // --- MOCK DATA ---
 interface ScmProduct {
@@ -66,6 +67,23 @@ export default function AdminPage() {
     const [scmData, setScmData] = useState<ScmProduct[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'crm' | 'scm' | 'usp'>('crm');
+    const router = useRouter();
+
+    useEffect(() => {
+        const user = localStorage.getItem('user');
+        if (!user) {
+            router.push('/login');
+            return;
+        }
+        try {
+            const parsedUser = JSON.parse(user);
+            if (parsedUser.role !== 'admin') {
+                router.push('/');
+            }
+        } catch {
+            router.push('/login');
+        }
+    }, [router]);
 
     useEffect(() => {
         async function fetchScm() {
