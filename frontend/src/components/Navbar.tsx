@@ -51,11 +51,11 @@ export default function Navbar() {
                     <Link href="/products?category=subscription" className="text-sm font-medium text-kori-gold hover:text-kori-sage transition-colors">
                         Kori Club
                     </Link>
-                    <Link href="/checkout" className="text-sm font-medium text-kori-charcoal-light hover:text-kori-sage transition-colors">
-                        Cart
-                    </Link>
                     {user ? (
                         <>
+                            <Link href="/checkout" className="text-sm font-medium text-kori-charcoal-light hover:text-kori-sage transition-colors">
+                                Cart
+                            </Link>
                             <Link href="/dashboard" className="text-sm font-medium text-kori-charcoal-light hover:text-kori-sage transition-colors">
                                 My Account
                             </Link>
@@ -97,9 +97,9 @@ export default function Navbar() {
                     <div className="px-6 py-4 space-y-3">
                         <Link href="/products" className="block text-sm text-kori-charcoal-light hover:text-kori-sage">Flavors</Link>
                         <Link href="/products?category=subscription" className="block text-sm text-kori-gold hover:text-kori-sage">Kori Club</Link>
-                        <Link href="/checkout" className="block text-sm text-kori-charcoal-light hover:text-kori-sage">Cart</Link>
                         {user ? (
                             <>
+                                <Link href="/checkout" className="block text-sm text-kori-charcoal-light hover:text-kori-sage">Cart</Link>
                                 <Link href="/dashboard" className="block text-sm text-kori-charcoal-light hover:text-kori-sage">My Account</Link>
                                 {user.role === 'admin' && (
                                     <Link href="/admin" className="block text-xs text-kori-charcoal-light/50 hover:text-kori-sage">Admin</Link>
