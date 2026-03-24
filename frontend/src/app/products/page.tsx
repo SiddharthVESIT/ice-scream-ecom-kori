@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 interface Product {
@@ -63,6 +63,29 @@ function ProductsCatalog() {
     const [activeCategory, setActiveCategory] = useState(categoryParam);
     const [flavorFilter, setFlavorFilter] = useState('');
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
+
+    const addToCart = (product: Product, emoji: string) => {
+        const saved = localStorage.getItem('cart');
+        let currentCart = [];
+        if (saved) {
+            try { currentCart = JSON.parse(saved); } catch(e) {}
+        }
+        const existing = currentCart.find((i: any) => i.id === product.id);
+        if (existing) {
+            existing.quantity += 1;
+        } else {
+            currentCart.push({
+                id: product.id,
+                name: product.name,
+                emoji,
+                price: product.price_cents / 100,
+                quantity: 1
+            });
+        }
+        localStorage.setItem('cart', JSON.stringify(currentCart));
+        router.push('/checkout');
+    };
 
     useEffect(() => {
         setActiveCategory(categoryParam);
@@ -216,12 +239,12 @@ function ProductsCatalog() {
                                                 Join Waitlist ({product.waitlist_count} waiting)
                                             </button>
                                         ) : (
-                                            <Link
-                                                href="/checkout"
+                                            <button
+                                                onClick={() => addToCart(product, emoji)}
                                                 className="block w-full py-2.5 rounded-full text-xs font-medium text-center bg-kori-charcoal text-kori-cream hover:bg-kori-sage transition-colors"
                                             >
                                                 Add to Cart
-                                            </Link>
+                                            </button>
                                         )}
                                     </div>
                                 </div>

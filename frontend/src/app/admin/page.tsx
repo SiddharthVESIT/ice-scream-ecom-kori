@@ -89,8 +89,9 @@ export default function AdminPage() {
         async function fetchScm() {
             setLoading(true);
             try {
+                const token = localStorage.getItem('token');
                 const res = await fetch('http://localhost:4000/api/v1/products/scm', {
-                    headers: { Authorization: 'Bearer demo-token' },
+                    headers: { Authorization: `Bearer ${token}` },
                 });
                 const json = await res.json();
                 setScmData(json.data || []);

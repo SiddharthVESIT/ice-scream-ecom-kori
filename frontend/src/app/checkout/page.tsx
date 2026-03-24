@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 interface CartItem {
@@ -11,28 +11,35 @@ interface CartItem {
     quantity: number;
 }
 
-const INITIAL_CART: CartItem[] = [
-    { id: 3, name: 'Kyoto Matcha', emoji: '🍵', price: 16.80, quantity: 2 },
-    { id: 1, name: 'Hokkaido Milk', emoji: '🥛', price: 14.80, quantity: 1 },
-    { id: 5, name: 'Sakura Blossom', emoji: '🌸', price: 17.80, quantity: 1 },
-];
-
 export default function CheckoutPage() {
-    const [cart, setCart] = useState<CartItem[]>(INITIAL_CART);
+    const [cart, setCart] = useState<CartItem[]>([]);
     const [orderPlaced, setOrderPlaced] = useState(false);
+    const [loaded, setLoaded] = useState(false);
+
+    useEffect(() => {
+        const saved = localStorage.getItem('cart');
+        if (saved) {
+            try { setCart(JSON.parse(saved)); } catch(e) {}
+        }
+        setLoaded(true);
+    }, []);
 
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const shipping = subtotal >= 50 ? 0 : 5.00;
     const total = subtotal + shipping;
 
     const updateQuantity = (id: number, delta: number) => {
-        setCart(prev => prev.map(item => {
-            if (item.id === id) {
-                const newQty = Math.max(0, item.quantity + delta);
-                return { ...item, quantity: newQty };
-            }
-            return item;
-        }).filter(item => item.quantity > 0));
+        setCart(prev => {
+            const result = prev.map(item => {
+                if (item.id === id) {
+                    const newQty = Math.max(0, item.quantity + delta);
+                    return { ...item, quantity: newQty };
+                }
+                return item;
+            }).filter(item => item.quantity > 0);
+            localStorage.setItem('cart', JSON.stringify(result));
+            return result;
+        });
     };
 
     const placeOrder = async () => {
@@ -70,11 +77,14 @@ export default function CheckoutPage() {
                         body: JSON.stringify({
                             razorpay_order_id: response.razorpay_order_id,
                             razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature
+                            razorpay_signature: response.razorpay_signature,
+                            cartItems: cart,
+                            totalCents: Math.round(total * 100)
                         })
                     });
                     
                     if (verifyRes.ok) {
+                        localStorage.removeItem('cart');
                         setOrderPlaced(true);
                     } else {
                         alert('Payment verification failed.');
@@ -135,7 +145,9 @@ export default function CheckoutPage() {
                     Review your selection before checkout
                 </p>
 
-                {cart.length === 0 ? (
+                {!loaded ? (
+                    <div className="text-center py-20 text-kori-charcoal-light/40 animate-pulse">Loading cart...</div>
+                ) : cart.length === 0 ? (
                     <div className="text-center py-20">
                         <span className="text-5xl block mb-4">🧊</span>
                         <p className="text-kori-charcoal-light/40 mb-6">Your cart is empty</p>

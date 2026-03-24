@@ -88,8 +88,7 @@ CREATE TABLE IF NOT EXISTS carts (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   status VARCHAR(20) NOT NULL DEFAULT 'active',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  CONSTRAINT carts_user_status_unique UNIQUE (user_id, status)
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS cart_items (
@@ -151,6 +150,7 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_products_category_active ON products(category, is_active);
 CREATE INDEX IF NOT EXISTS idx_products_batch_status ON products(batch_status);
 CREATE INDEX IF NOT EXISTS idx_carts_user_status ON carts(user_id, status);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_carts_user_active_unique ON carts(user_id) WHERE status = 'active';
 CREATE INDEX IF NOT EXISTS idx_cart_items_cart_id ON cart_items(cart_id);
 CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);

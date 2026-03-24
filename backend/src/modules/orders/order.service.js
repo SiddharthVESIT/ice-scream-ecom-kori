@@ -60,3 +60,63 @@ export async function checkout(userId, paymentMethod = 'card') {
 export async function getMyOrders(userId) {
     return getOrdersByUserId(userId);
 }
+
+export async function checkoutDirect(userId, paymentMethod, items, totalCents) {
+    if (!items || items.length === 0) {
+        throw new Error('Cart is empty');
+    }
+
+    const subtotalCents = totalCents >= 5000 ? totalCents : totalCents - 500;
+    const shippingCents = totalCents >= 5000 ? 0 : 500;
+    const orderNumber = `KORI-${Date.now()}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
+
+    // Ensure we have a valid cartId to satisfy DB constraints
+    const cartData = await getCartTotals(userId);
+    const cartId = cartData.cartId;
+
+    // Create order
+    const order = await createOrder({
+        userId,
+        cartId,
+        orderNumber,
+        subtotalCents,
+        shippingCents,
+        totalCents
+    });
+
+    // We mark the cart as checked out since it was used for this checkout order
+    await markCartCheckedOut(cartId);
+
+    // Format items for createOrderItems
+    const formattedItems = items.map(item => ({
+        product_id: item.id || item.product_id,
+        quantity: item.quantity,
+        price_cents: Math.round(item.price * 100)
+    }));
+
+    // Create order items
+    await createOrderItems(order.id, formattedItems);
+
+    // Process payment
+    await createPayment({
+        orderId: order.id,
+        method: paymentMethod,
+        amountCents: totalCents
+    });
+
+    // Decrement stock for each item
+    for (const item of formattedItems) {
+        await updateProductStock(item.product_id, -item.quantity);
+    }
+
+    // Award loyalty points (10 pts per dollar spent)
+    const pointsEarned = Math.floor((totalCents / 100) * POINTS_PER_DOLLAR);
+    await updateLoyaltyPoints(userId, pointsEarned);
+
+    return {
+        order,
+        pointsEarned,
+        ecoPackaging: true,
+        shippingNote: 'Shipped with eco-friendly dry-ice packaging 🧊'
+    };
+}

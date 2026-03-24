@@ -1,0 +1,6 @@
+error: duplicate key value violates unique constraint "carts_user_status_unique"
+    at C:\Users\Hirdhay Jadhwani\OneDrive\Desktop\Ecom-Assignment\ice-scream-ecom-kori\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async markCartCheckedOut (file:///C:/Users/Hirdhay%20Jadhwani/OneDrive/Desktop/Ecom-Assignment/ice-scream-ecom-kori/backend/src/modules/cart/cart.repository.js:61:5)
+    at async checkoutDirect (file:///C:/Users/Hirdhay%20Jadhwani/OneDrive/Desktop/Ecom-Assignment/ice-scream-ecom-kori/backend/src/modules/orders/order.service.js:88:5)
+    at async verifyRazorpayPayment (file:///C:/Users/Hirdhay%20Jadhwani/OneDrive/Desktop/Ecom-Assignment/ice-scream-ecom-kori/backend/src/modules/orders/order.controller.js:53:26)

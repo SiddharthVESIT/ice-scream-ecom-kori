@@ -1,4 +1,4 @@
-import { checkout, getMyOrders } from './order.service.js';
+import { checkout, getMyOrders, checkoutDirect } from './order.service.js';
 import { razorpayInstance } from '../../config/razorpay.js';
 import crypto from 'crypto';
 
@@ -38,7 +38,7 @@ export async function createRazorpayOrder(req, res) {
 
 export async function verifyRazorpayPayment(req, res) {
     try {
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, cartItems, totalCents } = req.body;
 
         const body = razorpay_order_id + '|' + razorpay_payment_id;
         const expectedSignature = crypto
@@ -47,8 +47,11 @@ export async function verifyRazorpayPayment(req, res) {
             .digest('hex');
 
         if (expectedSignature === razorpay_signature) {
-            // Usually we would execute checkout() here to mark the DB tables
-            return res.status(200).json({ success: true, message: 'Payment verified successfully.' });
+            let result = null;
+            if (cartItems && totalCents) {
+                result = await checkoutDirect(req.user.sub, 'razorpay', cartItems, totalCents);
+            }
+            return res.status(200).json({ success: true, message: 'Payment verified successfully.', data: result });
         } else {
             return res.status(400).json({ success: false, message: 'Invalid signature' });
         }
